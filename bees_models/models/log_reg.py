@@ -41,18 +41,18 @@ class LogisticRegression:
         return (1 / m) * np.dot(self.X.T, self.sigmoid(theta, self.X) - self.y)
 
     # batch gradient descent
-    def gradient_descent(self, grad_func, theta, learning_rate=0.01, n_itrs=1500):
-        for i in range(n_itrs):
+    def gradient_descent(self, grad_func, theta, learning_rate, iterations):
+        for i in range(iterations):
             theta = theta - (learning_rate * grad_func(theta))
 
         self.theta = theta
 
-    def train(self, X, y):
+    def train(self, X, y, learning_rate=0.01, iterations=1500):
 
         self.set_train_data(X, y)
         theta = np.zeros((X.shape[1] + 1, 1))
 
-        self.gradient_descent(self.gradient_func, theta)
+        self.gradient_descent(self.gradient_func, theta, learning_rate, iterations)
 
     # predict the classes for the data
     def predict(self, X_test):

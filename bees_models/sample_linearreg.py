@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import StandardScaler
 
 class ScratchLinearRegression:
 
@@ -19,6 +20,7 @@ class ScratchLinearRegression:
         self.params = np.zeros((self.n_features + 1, 1))
         self.coef_ = None
         self.intercept_ = None
+
 
     def fit(self):
 
@@ -37,7 +39,8 @@ class ScratchLinearRegression:
             X = self.X
         else:
             n_samples = np.size(X,0)
-            X = np.hstack((np.ones((n_samples, 1)), (X - np.mean(X, 0)) / np.std(X, 0)))
+            # X = np.hstack((np.ones((n_samples, 1)), (X - np.mean(X, 0)) / np.std(X, 0)))
+            X = np.hstack((np.ones((n_samples, 1)), X))
 
         if y is None:
             y = self.y
@@ -79,56 +82,59 @@ dataset = load_boston()
 
 # region flat Linear Reg implementation
 # seperate the data
-X = dataset.data
-y = dataset.target[:, np.newaxis]
-
-# normalizes the data using standard score
-mu = np.mean(X, 0)
-sigma = np.std(X, 0)
-
-X = (X-mu) / sigma
-
-# calculcate necessary parameter vales
-n_samples = len(y)
-X = np.hstack((np.ones((n_samples, 1)), X))
-n_features = np.size(X, 1)
-params = np.zeros((n_features, 1))
-
-n_iters = 1500
-learning_rate = 0.01
-
-# run gradient descent to find optimal w and get final cost
-(J_history, optimal_params) = gradient_descent(X, y, params, learning_rate, n_iters)
-
-print("Scratch final cost: ", J_history[-1], "\n")
+# X = dataset.data
+# y = dataset.target[:, np.newaxis]
+#
+# # normalizes the data using standard score
+# mu = np.mean(X, 0)
+# sigma = np.std(X, 0)
+#
+# X = (X-mu) / sigma
+#
+# # calculcate necessary parameter vales
+# n_samples = len(y)
+# X = np.hstack((np.ones((n_samples, 1)), X))
+# n_features = np.size(X, 1)
+# params = np.zeros((n_features, 1))
+#
+# n_iters = 1500
+# learning_rate = 0.01
+#
+# # run gradient descent to find optimal w and get final cost
+# (J_history, optimal_params) = gradient_descent(X, y, params, learning_rate, n_iters)
+#
+# print("Scratch final cost: ", J_history[-1], "\n")
 
 #endregion
 
 #region Comparison run
 # scratch vs scikit-learn implementations
-# X = dataset.data
-# y = dataset.target
-#
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-#
-# our_regressor = ScratchLinearRegression(X_train, y_train).fit()
-#
+X = dataset.data
+y = dataset.target
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+std_sc = StandardScaler()
+X_train = std_sc.fit_transform(X_train)
+X_test = std_sc.transform(X_test)
+our_regressor = ScratchLinearRegression(X_train, y_train).fit()
+our_train_accuracy = our_regressor.score()
+our_test_accuracy = our_regressor.score(X_test, y_test)
+
 # poly_features = PolynomialFeatures(1)
 # X_train = poly_features.fit_transform(X_train)
 # sklearn_regressor = LinearRegression().fit(X_train, y_train)
-#
-# our_train_accuracy = our_regressor.score()
 # sklearn_train_accuracy = sklearn_regressor.score(X_train, y_train)
-#
-# our_test_accuracy = our_regressor.score(X_test, y_test)
-#
 # X_test = poly_features.transform(X_test)
 # sklearn_test_accuracy = sklearn_regressor.score(X_test, y_test)
-#
+
 # results = pd.DataFrame([[our_train_accuracy, sklearn_train_accuracy],
 #              [our_test_accuracy, sklearn_test_accuracy]],
 #              ['Training Accuracy', 'Test Accuracy'],
 #              ['Our Implementation', 'Sklearn\'s Implementation'])
-#
 # print(results)
+
+print('MSE Score: %f' % our_test_accuracy)
+
+
 #endregion

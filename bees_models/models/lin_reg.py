@@ -24,30 +24,35 @@ class LinearRegression:
         self.X = np.hstack((np.ones((len(y), 1)), X))
         self.y = y[:, np.newaxis]
 
-    # MSE cost function
+    # MSE or R2 cost function
     def cost_function(self, y_pred, y_actual):
-        m = len(self.y_pred)
+        m = len(y_pred)
+        y_pred = y_pred.flatten()
+        y_actual = y_actual.flatten()
 
         return (1/(2 * m))*np.sum((y_pred - y_actual) ** 2)
+        # return 1 - (((y_actual - y_pred) ** 2).sum() / ((y_actual - y_actual.mean()) ** 2).sum())
 
     def gradient_func(self, theta):
         m = len(self.y)
-        return (1/m) * self.X.T @ (self.X @ theta - self.y)
+        return (0.03/m) * self.X.T @ (self.X @ theta - self.y)
 
     # batch gradient descent
-    def gradient_descent(self, grad_func, theta, learning_rate=0.01, n_itrs=1500):
-        for i in range(n_itrs):
-            theta = theta - (learning_rate * grad_func(theta))
-
+    def gradient_descent(self, grad_func, theta, learning_rate, iterations):
+        for i in range(iterations):
+            # theta = theta - (learning_rate * grad_func(theta))
+            theta = theta - (grad_func(theta))
         self.theta = theta
 
-    def train(self, X, y):
+    def train(self, X, y, learning_rate=0.03, iterations=1500):
 
         self.set_train_data(X, y)
         theta = np.zeros((X.shape[1] + 1, 1))
 
-        self.gradient_descent(self.gradient_func, theta)
+        self.gradient_descent(self.gradient_func, theta, learning_rate, iterations)
 
     def predict(self, X):
 
+        X = (X - self.mu) / self.sigma
+        X = np.hstack((np.ones((X.shape[0], 1)), X))
         return X @ self.theta
