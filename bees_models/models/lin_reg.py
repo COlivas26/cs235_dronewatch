@@ -10,6 +10,7 @@ class LinearRegression:
         self.theta = []
         self.mu = 0
         self.sigma = 0
+        self.theta_log = []
 
     def set_train_data(self, X, y):
 
@@ -23,6 +24,7 @@ class LinearRegression:
         self.sigma = sigma
         self.X = np.hstack((np.ones((len(y), 1)), X))
         self.y = y[:, np.newaxis]
+        self.theta_log = []
 
     # MSE or R2 cost function
     def cost_function(self, y_pred, y_actual):
@@ -39,9 +41,14 @@ class LinearRegression:
 
     # batch gradient descent
     def gradient_descent(self, grad_func, theta, learning_rate, iterations):
+
+        self.theta_log.append(theta)
+
         for i in range(iterations):
             # theta = theta - (learning_rate * grad_func(theta))
             theta = theta - (grad_func(theta))
+            self.theta_log.append(theta)
+
         self.theta = theta
 
     def train(self, X, y, learning_rate=0.03, iterations=1500):
@@ -51,8 +58,19 @@ class LinearRegression:
 
         self.gradient_descent(self.gradient_func, theta, learning_rate, iterations)
 
-    def predict(self, X):
+    def predict(self, X_test):
 
-        X = (X - self.mu) / self.sigma
-        X = np.hstack((np.ones((X.shape[0], 1)), X))
-        return X @ self.theta
+        X_test = (X_test - self.mu) / self.sigma
+        X_test = np.hstack((np.ones((X_test.shape[0], 1)), X_test))
+        return X_test @ self.theta
+
+    def cal_costs(self):
+
+        costs = []
+
+        for theta in self.theta_log:
+
+            y_pred = self.X @ theta
+            costs.append(self.cost_function(y_pred, self.y))
+
+        return costs
