@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 
 class LinearRegression:
 
@@ -15,6 +15,9 @@ class LinearRegression:
     def set_train_data(self, X, y):
 
         # normalize and reshape X
+
+        # X = X[:, 1:]
+
         mu = np.mean(X, 0)
         sigma = np.std(X, 0)
 
@@ -26,18 +29,20 @@ class LinearRegression:
         self.y = y[:, np.newaxis]
         self.theta_log = []
 
-    # MSE or R2 cost function
+    # mean square error (MSE)
     def cost_function(self, y_pred, y_actual):
         m = len(y_pred)
         y_pred = y_pred.flatten()
-        y_actual = y_actual.flatten()
+
+        # y_actual is a series, convert to np.array
+        if isinstance(y_actual, pd.Series):
+            y_actual = np.array(y_actual)
 
         return (1/(2 * m))*np.sum((y_pred - y_actual) ** 2)
-        # return 1 - (((y_actual - y_pred) ** 2).sum() / ((y_actual - y_actual.mean()) ** 2).sum())
 
     def gradient_func(self, theta):
         m = len(self.y)
-        return (0.03/m) * self.X.T @ (self.X @ theta - self.y)
+        return (1/m) * self.X.T @ (self.X @ theta - self.y)
 
     # batch gradient descent
     def gradient_descent(self, grad_func, theta, learning_rate, iterations):
@@ -45,8 +50,7 @@ class LinearRegression:
         self.theta_log.append(theta)
 
         for i in range(iterations):
-            # theta = theta - (learning_rate * grad_func(theta))
-            theta = theta - (grad_func(theta))
+            theta = theta - (learning_rate * grad_func(theta))
             self.theta_log.append(theta)
 
         self.theta = theta
@@ -59,7 +63,7 @@ class LinearRegression:
         self.gradient_descent(self.gradient_func, theta, learning_rate, iterations)
 
     def predict(self, X_test):
-
+        # X_test = X_test[:, 1:]
         X_test = (X_test - self.mu) / self.sigma
         X_test = np.hstack((np.ones((X_test.shape[0], 1)), X_test))
         return X_test @ self.theta

@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 
 class LogisticRegression:
 
@@ -68,7 +68,12 @@ class LogisticRegression:
     # calculate the percentage of accuracy of prediction
     def accuracy(self, y_pred, y_actual):
         y_pred = y_pred.flatten()
-        y_actual = y_actual.flatten()
+
+        # y_actual is a series, convert to np.array
+        if isinstance(y_actual, pd.Series):
+            y_actual = np.array(y_actual)
+
+        # y_actual = y_actual.flatten()
 
         accu = np.mean(y_pred == y_actual)
         return accu * 100
