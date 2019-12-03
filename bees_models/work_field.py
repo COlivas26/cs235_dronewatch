@@ -6,7 +6,7 @@ from imblearn.over_sampling import SMOTE
 from models.lin_reg import LinearRegression as ScratchLinearRegression
 from models.log_reg import LogisticRegression as ScratchLogisticRegression
 from sklearn.metrics import confusion_matrix, f1_score
-
+from sklearn.utils import resample
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.preprocessing import StandardScaler
 
@@ -70,10 +70,10 @@ print()
 # print()
 #
 log_reg_data = pd.read_csv("logRegressionData.csv")
-log_reg_data = log_reg_data.loc[log_reg_data.apply(lambda x: 180 < x['flight_duration'] < 2880, axis=1)]
+log_reg_data = log_reg_data.loc[log_reg_data.apply(lambda x: 60 < x['flight_duration'] < 23440, axis=1)]
 log_X = log_reg_data.iloc[:, 1:-1]
 log_y = log_reg_data.iloc[:, -1]
-log_X = log_X.drop(columns=['nosema'])
+# log_X = log_X.drop(columns=['nosema'])
 
 # split the data into train and test sets
 X_train_log, X_test_log, y_train_log, y_test_log = train_test_split(log_X, log_y, test_size=0.2, random_state=42)
@@ -81,7 +81,17 @@ X_train_log, X_test_log, y_train_log, y_test_log = train_test_split(log_X, log_y
 # split the training data into train and validation sets
 X_train_log, X_val_log, y_train_log, y_val_log = train_test_split(X_train_log, y_train_log, test_size=0.25, random_state=42)
 
-sm = SMOTE(sampling_strategy=.75, random_state=42)
+log_train_data = X_train_log
+log_train_data['gbd'] = y_train_log
+bad_day = log_train_data.loc[log_train_data.apply(lambda x: x['gbd'] == 0, axis=1)]
+good_day = log_train_data.loc[log_train_data.apply(lambda x: x['gbd'] == 1, axis=1)]
+bad_day_upsample = resample(bad_day, replace=True, n_samples=len(good_day), random_state=42)
+log_train_data_upsampled = pd.concat([good_day, bad_day_upsample])
+X_train_log_upsample = log_train_data_upsampled.iloc[:, :-1]
+y_train_log_upsample = log_train_data_upsampled.iloc[:, -1]
+
+
+sm = SMOTE(sampling_strategy=.60, random_state=42)
 X_train_log, y_train_log = sm.fit_sample(X_train_log, y_train_log)
 
 # apply the Logistic Regression model
@@ -92,7 +102,7 @@ logistic_reg.train(X_train_log, y_train_log)
 y_pred_log_val = logistic_reg.predict(X_val_log)
 accuracy = logistic_reg.accuracy(y_pred_log_val, y_val_log)
 print('Prediction accuracy of validation set: %f' % accuracy)
-log_conf_mtx = confusion_matrix(y_test_log, y_pred_log_val)
+log_conf_mtx = confusion_matrix(y_val_log, y_pred_log_val)
 logreg_f1_score = f1_score(y_val_log, y_pred_log_val, average='weighted')
 print('F1 Score of validation set: %f' % logreg_f1_score)
 print('Confusion Matrix of validation set:')
@@ -109,7 +119,7 @@ print(log_conf_mtx)
 # print(log_conf_mtx)
 # print()
 
-# # show plot of convergence of costs when calculating theta
+# show plot of convergence of costs when calculating theta
 # log_costs = logistic_reg.cal_costs()
 # plt.plot(range(len(log_costs)), log_costs)
 # plt.title('Convergence of cost function')
